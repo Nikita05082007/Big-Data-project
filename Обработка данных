@@ -1,0 +1,79 @@
+import pandas as pd
+
+
+class CheckData:
+    def __init__(self, df):
+        self.df = df
+        self.ride_id = df['ride_id']
+        self.rideable_type = df['rideable_type']
+        self.started_at = pd.to_datetime(df['started_at'], errors='coerce')
+        self.ended_at = pd.to_datetime(df['ended_at'], errors='coerce')
+        self.start_station_name = df['start_station_name']
+        self.start_station_id = df['start_station_id']
+        self.end_station_name = df['end_station_name']
+        self.end_station_id = df['end_station_id']
+        self.start_lat = df['start_lat']
+        self.start_lng = df['start_lng']
+        self.end_lat = df['end_lat']
+        self.end_lng = df['end_lng']
+        self.member_casual = df['member_casual']
+
+    def data_output(self):
+        for index, row in self.df.iterrows():
+            print(row)
+            break
+
+    def check_id(self):
+        station_coords = self.df[['start_station_id', 'start_lat', 'start_lng']].drop_duplicates()
+
+        grouped = station_coords.groupby('start_station_id').agg({'start_lat': 'nunique', 'start_lng': 'nunique'}).reset_index()
+
+        invalid_stations = grouped[(grouped['start_lat'] > 1) | (grouped['start_lng'] > 1)]
+
+        print(invalid_stations)
+
+    def check_time(self):
+        invalid_time = self.df.loc[self.started_at >= self.ended_at]
+
+        if not invalid_time.empty:
+            print("Найдены записи с неправильным временем")
+        else:
+            print("Все записи времени корректны.")
+
+    def check_location(self):
+        invalid_location = self.df.loc[
+            ~((self.df['start_lat'] >= 40.6445) & (self.df['start_lat'] <= 42.1231) &
+              (self.df['end_lat'] >= 40.6445) & (self.df['end_lat'] <= 42.1231) &
+              (self.df['start_lng'] >= -88.1401) & (self.df['start_lng'] <= -87.1241) &
+              (self.df['end_lng'] >= -88.1401) & (self.df['end_lng'] <= -87.1241))
+        ]
+
+        if not invalid_location.empty:
+            print("Найдены записи с неправильными координатами:")
+            print(invalid_location[['start_lat', 'start_lng', 'end_lat', 'end_lng']])
+        else:
+            print("Все записи координат корректны.")
+
+    def save_to_file(self):
+        file_path = f"C:/Users/Пользователь/Desktop/Обработанные файлы/{a[0]}/{a[0]}{a[1]}.csv"
+        self.df.to_csv(file_path, index=False)
+        print("Длина получившегося", len(self.df))
+
+
+s = "-divvy-tripdata.csv"
+path = "C:/Users/Пользователь/Desktop/Обработанные файлы"
+date_range = pd.date_range(start='2020-10-01', end='2024-10-31', freq='MS')
+
+
+for date in date_range:
+    a = str(date.strftime('%Y-%m')).split("-")
+    b = f"{path}/{a[0]}/{a[0]}{a[1]}.csv"
+    print(f"Обрабатываем файл: {b}", end=" ")
+
+    df = pd.read_csv(b, sep=",", decimal=".")
+    p = len(df)
+    df = df.dropna()
+    df = df.drop_duplicates(keep=False)
+
+    check_data = CheckData(df)
+    check_data.check_id()
