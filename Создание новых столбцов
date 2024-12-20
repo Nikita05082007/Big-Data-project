@@ -1,0 +1,45 @@
+import pandas as pd
+import numpy as np
+
+
+class AdditionalColumns():
+    def __init__(self, df):
+        self.df = df
+        self.started_at = pd.to_datetime(df['started_at'], errors='coerce')
+        self.ended_at = pd.to_datetime(df['ended_at'], errors='coerce')
+        self.start_lat = df['start_lat']
+        self.start_lng = df['start_lng']
+        self.end_lat = df['end_lat']
+        self.end_lng = df['end_lng']
+
+    def trip_length(self):
+        return (np.abs(self.start_lat - self.end_lat) + np.abs(self.start_lng - self.end_lng)) * 111
+
+    def trip_duration_seconds(self):
+        return (self.ended_at - self.started_at).dt.total_seconds()
+
+    def end_df(self):
+        self.df['trip_distance_manhattan_km'] = self.trip_length()
+        self.df['trip_duration_seconds'] = self.trip_duration_seconds()
+
+        self.df = self.df[(self.df['trip_duration_seconds'] >= 60) & (self.df['trip_duration_seconds'] <= 18000)]
+
+        columns_to_drop = ['ride_id', 'start_station_id', 'end_station_id', 'start_lat', 'start_lng', 'end_lat',
+                           'end_lng']
+        self.df.drop(columns=columns_to_drop, inplace=True, errors='ignore')
+
+        file_path = f"C:/Users/Пользователь/Desktop/Файлы для графиков/{a[0]}/{a[0]}{a[1]}.csv"
+        self.df.to_csv(file_path, index=False)
+
+
+s = "-divvy-tripdata.csv"
+path = "C:/Users/Пользователь/Desktop/Обработанные файлы"
+date_range = pd.date_range(start='2023-9-01', end='2023-10-31', freq='MS')
+
+for date in date_range:
+    a = str(date.strftime('%Y-%m')).split("-")
+    b = f"{path}/{a[0]}/{a[0]}{a[1]}.csv"
+    print(f"Обрабатываем файл: {b}")
+    df = pd.read_csv(b, sep=",", decimal=".")
+    p = AdditionalColumns(df)
+    p.end_df()
