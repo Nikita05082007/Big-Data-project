@@ -1,0 +1,29 @@
+import pandas as pd
+
+date_range = pd.date_range(start='2022-1-01', end='2022-12-31', freq='MS')
+path = "C:/Users/Пользователь/Desktop/Файлы для графиков"
+combined_df = pd.DataFrame()
+
+for date in date_range:
+    a = str(date.strftime('%Y-%m')).split("-")
+    b = f"{path}/{a[0]}/{a[0]}{a[1]}.csv"
+    print(f"Обрабатываем файл: {b}")
+    df = pd.read_csv(b, sep=",")
+    df['started_at'] = df['started_at'].str.split('.').str[0]
+    df['ended_at'] = df['ended_at'].str.split('.').str[0]
+    combined_df = pd.concat([combined_df, df], ignore_index=True)
+combined_df.to_csv('Visualization2022.csv', index=False, encoding="UTF-8")
+
+date_range = pd.date_range(start='2020-1-01', end='2024-12-31', freq='Y')
+combined_df = pd.DataFrame()
+
+for date in date_range:
+    a = str(date.strftime('%Y-%m')).split("-")
+    print(a)
+    b = f"Visualization{a[0]}.csv"
+    print(f"Обрабатываем файл: {b}")
+    df = pd.read_csv(b, sep=",")
+    combined_df = pd.concat([combined_df, df], ignore_index=True)
+
+
+combined_df.to_csv('Visualization.csv', index=False)
